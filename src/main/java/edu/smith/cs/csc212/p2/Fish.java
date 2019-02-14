@@ -24,7 +24,7 @@ public class Fish extends WorldObject {
 			Color.pink, 
 			Color.magenta
 			//  (lab) Add more colors.
-			// TODO: (P2) Maybe make a special fish that is more points?
+			// Maybe make a special fish that is more points?
 	};
 	/**
 	 * This is an index into the {@link #COLORS} array.
@@ -34,7 +34,7 @@ public class Fish extends WorldObject {
 	 * Whether or not this is the player;
 	 */
 	boolean player = false;
-	
+	boolean isFastScared;
 	/**
 	 * Called only on the Fish that is the player!
 	 */
@@ -51,6 +51,7 @@ public class Fish extends WorldObject {
 	public Fish(int color, World world) {
 		super(world);
 		this.color = color;
+		this.isFastScared = rand.nextBoolean();
 	}
 	
 	/**

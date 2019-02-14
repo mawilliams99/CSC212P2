@@ -50,7 +50,7 @@ public class World {
 	 */
 	public List<WorldObject> find(int x, int y) {
 		List<WorldObject> found = new ArrayList<>();
-		
+
 		// Check out every object in the world to find the ones at a particular point.
 		for (WorldObject w : this.items) {
 			// But only the ones that match are "found".
@@ -58,12 +58,12 @@ public class World {
 				found.add(w);
 			}
 		}
-		
+
 		// Give back the list, even if empty.
 		return found;
 	}
-	
-	
+
+
 	/**
 	 * This is used by PlayGame to draw all our items!
 	 * @return the list of items.
@@ -85,7 +85,7 @@ public class World {
 		System.out.println("register: "+item.getClass().getSimpleName());
 		items.add(item);
 	}
-	
+
 	/**
 	 * This is the opposite of register. It removes an item (like a fish) from the World.
 	 * @param item - the item to remove.
@@ -95,7 +95,7 @@ public class World {
 		System.out.println("remove: "+item.getClass().getSimpleName());
 		items.remove(item);
 	}
-	
+
 	/**
 	 * How big is the world we model?
 	 * @return the width.
@@ -110,7 +110,7 @@ public class World {
 	public int getHeight() {
 		return height;
 	}
-	
+
 	/**
 	 * Try to find an unused part of the World for a new object!
 	 * @return a point (x,y) that has nothing else in the grid.
@@ -129,7 +129,7 @@ public class World {
 		// Let's crash our Java program!
 		throw new IllegalStateException("Tried to pickUnusedSpace "+tries+" times and it failed! Maybe your grid is too small!");
 	}
-	
+
 	/**
 	 * Insert an item randomly into the grid.
 	 * @param item - the rock, fish, snail or other WorldObject.
@@ -139,16 +139,26 @@ public class World {
 		this.register(item);
 		item.checkFindMyself();
 	}
-	
+
 	/**
 	 * Insert a new Rock into the world at random.
 	 * @return the Rock.
 	 */
 	public Rock insertRockRandomly() {
-		Rock r = new Rock(this);
+		Rock r = (new Rock(this)) ;
 		insertRandomly(r);
 		return r;
 	}
+	public fallingRock insertfallingRockRandomly() {
+		fallingRock r = (new fallingRock(this)) ;
+		insertRandomly(r);
+		return r; }
+
+	public fishFood insertfishFoodRandomly() {
+		fishFood r = (new fishFood(this)) ;
+		insertRandomly(r);
+		return r; }
+	
 	
 	/**
 	 * Insert a new Fish into the world at random of a specific color.
@@ -160,13 +170,13 @@ public class World {
 		insertRandomly(f);
 		return f;
 	}
-	
+
 	public FishHome insertFishHome() {
 		FishHome home = new FishHome(this);
 		insertRandomly(home);
 		return home;
 	}
-	
+
 	/**
 	 * Insert a new Snail at random into the world.
 	 * @return the snail!
@@ -176,7 +186,7 @@ public class World {
 		insertRandomly(snail);
 		return snail;
 	}
-	
+
 	/**
 	 * Determine if a WorldObject can swim to a particular point.
 	 * 
@@ -185,56 +195,68 @@ public class World {
 	 * @param y - the y-tile.
 	 * @return true if they can move there.
 	 */
-	public boolean canSwim(WorldObject whoIsAsking, int x, int y) {
+	public boolean canSwim(WorldObject whoIsAsking, int x, int y)  {
 		if (x < 0 || x >= width || y < 0 || y >= height) {
 			return false;
 		}
-		
+
 		// This will be important.
 		boolean isPlayer = whoIsAsking.isPlayer();
-		
+
 		// We will need to look at who all is in the spot to determine if we can move there.
 		List<WorldObject> inSpot = this.find(x, y);
-		
+
 		for (WorldObject it : inSpot) {
-			// TODO(P2): Don't let us move over rocks as a Fish.
+			// Don't let us move over rocks as a Fish.
 			// The other fish shouldn't step "on" the player, the player should step on the other fish.
 			if (it instanceof Snail) {
 				// This if-statement doesn't let anyone step on the Snail.
 				// The Snail(s) are not gonna take it.
-				return false;
+				return false;}
+			else if (it instanceof Rock) {
+				// This if-statement doesn't let anyone step on the Rock.
+					return false;
+				}
+			else if (it instanceof fallingRock) {
+				// This if-statement doesn't let anyone step on the fallingRock.
+					return false;
+			}
+			// If we didn't see an obstacle, we can move there!
+			return true; }
+		return true; }
+
+
+
+		/**
+		 * This is how objects may move. Only Snails do right now.
+		 */
+		public void stepAll() {
+			for (WorldObject it : this.items) {
+				it.step();
 			}
 		}
-		
-		// If we didn't see an obstacle, we can move there!
-		return true;
-	}
-	
-	/**
-	 * This is how objects may move. Only Snails do right now.
-	 */
-	public void stepAll() {
-		for (WorldObject it : this.items) {
-			it.step();
+
+		/**
+		 * This signature is a little scary, but we need to support any subclass of WorldObject.
+		 * We don't know followers is a {@code List<Fish>} but it should work no matter what!
+		 * @param target the leader.
+		 * @param followers a set of objects to follow the leader.
+		 */
+		public static void objectsFollow(WorldObject target, List<? extends WorldObject> followers) {
+			// TODO(P2) Comment this method!
+			// What is recentPositions?
+			//Recent positions keeps tack of the past x,y points of objects so they know 
+			//the past movements of all of the fish so they can follow each other 
+			// What is followers?
+			//Followers is a list of fish which have been "captured" by the fish player 
+			// What is target?
+			// Why is past = putWhere[i+1]? Why not putWhere[i]?
+			//Because this allows the fish to move one square away from their recent position instead of
+			//just staying in their recent position. 
+			List<IntPoint> putWhere = new ArrayList<>(target.recentPositions);
+			for (int i=0; i<followers.size(); i++) {
+				IntPoint past = putWhere.get(i+1);
+				followers.get(i).setPosition(past.x, past.y);
+			}
 		}
 	}
-	
-	/**
-	 * This signature is a little scary, but we need to support any subclass of WorldObject.
-	 * We don't know followers is a {@code List<Fish>} but it should work no matter what!
-	 * @param target the leader.
-	 * @param followers a set of objects to follow the leader.
-	 */
-	public static void objectsFollow(WorldObject target, List<? extends WorldObject> followers) {
-		// TODO(P2) Comment this method!
-		// What is recentPositions?
-		// What is followers?
-		// What is target?
-		// Why is past = putWhere[i+1]? Why not putWhere[i]?
-		List<IntPoint> putWhere = new ArrayList<>(target.recentPositions);
-		for (int i=0; i<followers.size(); i++) {
-			IntPoint past = putWhere.get(i+1);
-			followers.get(i).setPosition(past.x, past.y);
-		}
-	}
-}
